@@ -1,0 +1,15 @@
+Stack-Based Architecture
+
+Initializes an empty stack, instruction pointer, stack pointer
+
+Instructions Needed:
+ - Push
+ - Pop
+ - Store
+ - Add
+ - Sub
+ - Mult
+ - Div
+ - Mod
+ - Jump
+ - Branch
