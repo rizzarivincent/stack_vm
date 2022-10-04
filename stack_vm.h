@@ -58,17 +58,52 @@ enum registers
   BP
 };
 
-int test_stack_size(unsigned int n);
+enum return_codes
+{
+  SUCCESS = 0,
+  FULL_STACK_ERROR,
+  EMPTY_STACK_ERROR,
+  STACK_TOO_SMALL_ERROR,
+  INVALID_ARGUMENT_ERROR,
+  DIVISION_BY_ZERO_ERROR,
+  INVALID_INSTRUCTION_ERROR
+};
 
-void push(uint16_t n);
+// Needed for one and two stack args function calls
+int16_t f_add(int16_t a, int16_t b) return a + b;
+int16_t f_subtract(int16_t a, int16_t b) return a - b;
+int16_t f_multiply(int16_t a, int16_t b) return (int16_t)a * b;
+int16_t f_divide(int16_t a, int16_t b) return a / b;
+int16_t f_mod(int16_t a, int16_t b) return a % b;
+int16_t f_and(int16_t a, int16_t b) return a & b;
+int16_t f_or(int16_t a, int16_t b) return a | b;
+int16_t f_not(int16_t a) return ~a;
+int16_t f_left_shift(int16_t a, int16_t b) return a << b;
+int16_t f_right_shift(int16_t a, int16_t b) return a >> b;
 
-uint16_t pop(void);
+// Helper functions to grab lo and hi bits of 32-bit integer
+uint16_t lo(uint32_t n) return n & (0xFFFF);
+uint16_t hi(uint32_t n) return (n >> 16) & (0xFFFF);
 
-uint16_t peek(void);
+int push(int16_t n);
 
-void handle_instruction(uint16_t instruction);
+int pop(int16_t *n);
 
-int program_length(FILE *file, uint16_t *data, unsigned int length);
+int pop2(int16_t *n, int16_t *m);
+
+int peek(int16_t *n);
+
+int swap(uint16_t n);
+
+int16_t sign_extend(uint16_t n, unsigned int num_bits);
+
+int one_arg_no_operand(int16_t (*f)(int16_t));
+
+int two_args_no_operand(int16_t (*f)(int16_t, int16_t));
+
+int handle_instruction(uint16_t instruction);
+
+unsigned int program_length(FILE *file);
 
 void fetch_instructions(FILE *file, uint16_t *data, unsigned int length);
 

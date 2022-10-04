@@ -1,33 +1,76 @@
-#include <stdio.h>
-#include <stdint.h>
 #include "stack_vm.h"
 
-uint16_t memory[MEMORY_MAX];
+int16_t memory[MEMORY_MAX];
 uint16_t reg[3];
 
-int test_stack_size(unsigned int n)
+int push(int16_t n)
 {
-  uint16_t sp = reg[SP];
-  if (sp - STACK_START < n)
-  {
-    return 0;
-  }
-  return 1;
+  if (reg[SP] <= STACK_END)
+    return FULL_STACK_ERROR;
+  memory[reg[SP]--] = n;
+  return SUCCESS;
 }
 
-void push(uint16_t n)
+int pop(int16_t *n)
+{
+  if (reg[SP] >= STACK_START)
+    return EMPTY_STACK_ERROR;
+  *n = memory[++reg[SP]];
+  return SUCCESS;
+}
+
+int pop2(int16_t *n, int16_t *m)
+{
+  if (reg[SP] >= (STACK_START - 1))
+    return EMPTY_STACK_ERROR;
+  *n = memory[++reg[SP]];
+  *m = memory[++reg[SP]];
+  return SUCCESS;
+}
+
+int peek(int16_t *n)
+{
+  if (reg[SP] >= STACK_START)
+    return EMPTY_STACK_ERROR;
+  *n = memory[reg[SP] + 1];
+  return SUCCESS;
+}
+
+int swap(uint16_t n)
+{
+  if (n <= 0)
+    return INVALID_ARGUMENT_ERROR;
+  if (reg[SP] >= (STACK_START - n))
+    return STACK_TOO_SMALL_ERROR;
+  uint16_t i = reg[SP] + 1;
+  uint16_t j = reg[SP] + (n + 1);
+  uint16_t a = memory[i];
+  memory[i] = memory[j];
+  memory[j] = a;
+  return SUCCESS;
+}
+
+int16_t sign_extend(uint16_t n, unsigned int num_bits)
+{
+  if ((n >> (num_bits - 1)) & 1)
+    n |= (0xFFFF << num_bits);
+  return n;
+}
+
+int one_arg_no_operand(int16_t (*f)(int16_t))
 {
 }
 
-uint16_t pop(void)
+int two_args_no_operand(int16_t (*f)(int16_t, int16_t))
 {
+  int16_t a;
+  int16_t b;
+  int return_value = pop2(&a, &b);
+  push(f(a, b));
+  return return_value;
 }
 
-uint16_t peek(void)
-{
-}
-
-void handle_instruction(uint16_t instruction)
+int handle_instruction(uint16_t instruction)
 {
   unsigned int operation = instruction >> 13;
   unsigned int operand = instruction & ((1 << 13) - 1);
@@ -36,27 +79,26 @@ void handle_instruction(uint16_t instruction)
   // Push an immediate value on the stack
   case OP_PUSH:
   {
-    uint16_t addr13 = operand;
-    push(addr13);
-    break;
+    int16_t imm13 = sign_extend(operand, 13);
+    return push(imm13);
   }
 
   // Load a value from memory onto the top of the stack
   case OP_LOAD:
   {
     uint16_t addr13 = operand;
-    uint16_t value = memory[addr13];
-    push(value);
-    break;
+    int16_t value = memory[addr13];
+    return push(value);
   }
 
   // Pop the top value off of the stack and store in memory
   case OP_STOR:
   {
     uint16_t addr13 = operand;
-    uint16_t value = pop();
+    int16_t value;
+    int return_value = pop(&value);
     memory[addr13] = value;
-    break;
+    return return_value;
   }
 
   // Moves the instruction pointer to the address specified by the immediate value
@@ -64,6 +106,7 @@ void handle_instruction(uint16_t instruction)
   {
     uint16_t addr13 = operand;
     reg[IP] = addr13;
+    return SUCCESS;
   }
 
   // If the conditional flag is set to True, move the instruction pointer to the address specified by the immediate value
@@ -74,13 +117,14 @@ void handle_instruction(uint16_t instruction)
     {
       reg[IP] = addr13;
     }
+    return SUCCESS;
   }
 
   // Swaps the current TOS with the value n addresses above, where n is a 13-bit immediate
   case OP_SWAP:
   {
     uint16_t imm13 = operand;
-    uint16_t top = pop();
+    return swap(imm13);
   }
 
   // Executes a trap code
@@ -109,90 +153,84 @@ void handle_instruction(uint16_t instruction)
     {
     case NO_POP:
     {
-      pop();
-      break;
+      int16_t a;
+      return pop(&a);
     }
     case NO_ADD:
     {
-      uint16_t a = pop();
-      uint16_t b = pop();
-      push(a + b);
-      break;
+      return two_args_no_operand(f_add);
     }
     case NO_SUB:
     {
-      uint16_t a = pop();
-      uint16_t b = pop();
-      push(a - b);
-      break;
+      return two_args_no_operand(f_subtract);
     }
     case NO_MULT:
     {
-      uint16_t a = pop();
-      uint16_t b = pop();
-      push(a * b);
-      break;
+      return two_args_no_operand(f_multiply);
     }
     case NO_MULTC:
     {
+      int16_t a;
+      int16_t b;
+      int return_value = pop2(&a, &b);
+      if (return_value != SUCCESS)
+        return return_value;
+      int32_t result = a * b;
+      int16_t hi_result = (int16_t)hi((uint32_t)result);
+      int16_t lo_result = (int16_t)lo((uint32_t)result);
+      push(hi_result);
+      push(lo_result);
+      return SUCCESS;
     }
     case NO_DIV:
     {
-      uint16_t a = pop();
-      uint16_t b = pop();
-      push(a / b);
-      break;
+      return two_args_no_operand(f_divide);
     }
     case NO_MOD:
     {
-      uint16_t a = pop();
-      uint16_t b = pop();
-      push(a % b);
-      break;
+      return two_args_no_operand(f_mod);
     }
     case NO_AND:
     {
-      uint16_t a = pop();
-      uint16_t b = pop();
-      push(a & b);
-      break;
+      return two_args_no_operand(f_and);
     }
     case NO_OR:
     {
-      uint16_t a = pop();
-      uint16_t b = pop();
-      push(a | b);
-      break;
+      return two_args_no_operand(f_or);
     }
     case NO_NOT:
     {
-      uint16_t a = pop();
-      push(~a);
-      break;
+      return one_arg_no_operand(f_not);
     }
     case NO_SHFTL:
     {
-      uint16_t a = pop();
-      uint16_t b = pop();
-      push(a << b);
-      break;
+      return two_args_no_operand(f_left_shift);
     }
     case NO_SHFTR:
     {
-      uint16_t a = pop();
-      uint16_t b = pop();
-      push(a >> b);
-      break;
+      return two_args_no_operand(f_right_shift);
     }
     case NO_DUP:
     {
-      uint16_t a = pop();
-      push(a);
-      push(a);
-      break;
+      int16_t a;
+      int return_value_1 = pop(&a);
+      if (return_value_1 != SUCCESS)
+        return return_value_1;
+      int return_value_2 = push(a);
+      if (return_value_2 != SUCCESS)
+        return return_value_2;
+      int return_value_3 = push(a);
+      if (return_value_3 != SUCCESS)
+        return return_value_3;
+      return SUCCESS;
     }
     case NO_SWAPS:
     {
+      uint16_t n;
+      int return_value_1 = pop(&n);
+      if (return_value_1 != SUCCESS)
+        return return_value_1;
+      return swap(n);
     }
     case NO_LOADS:
     {
@@ -200,15 +238,29 @@ void handle_instruction(uint16_t instruction)
     case NO_LOADSI:
     {
     }
+    case NO_STORS:
+    {
     }
+    case NO_STORSI:
+    {
+    }
+    default:
+    {
+      return INVALID_INSTRUCTION_ERROR;
+    }
+    }
+  }
+  default:
+  {
+    return INVALID_INSTRUCTION_ERROR;
   }
   }
 }
 
-int program_length(FILE *file)
+unsigned int program_length(FILE *file)
 {
   fseek(file, 0, SEEK_END);
-  int length = ftell(file);
+  unsigned int length = (unsigned int)ftell(file);
   fseek(file, 0, SEEK_SET);
   return length;
 }
