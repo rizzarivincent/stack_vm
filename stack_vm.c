@@ -216,13 +216,8 @@ int handle_instruction(uint16_t instruction)
       int return_value_1 = pop(&a);
       if (return_value_1 != SUCCESS)
         return return_value_1;
-      int return_value_2 = push(a);
-      if (return_value_2 != SUCCESS)
-        return return_value_2;
-      int return_value_3 = push(a);
-      if (return_value_3 != SUCCESS)
-        return return_value_3;
-      return SUCCESS;
+      push(a);
+      return push(a);
     }
     case NO_SWAPS:
     {
@@ -234,15 +229,47 @@ int handle_instruction(uint16_t instruction)
     }
     case NO_LOADS:
     {
+      uint16_t address;
+      int return_value_1 = pop(&address);
+      if (return_value_1 != SUCCESS)
+        return return_value_1;
+      int16_t value = memory[address];
+      return push(value);
     }
     case NO_LOADSI:
     {
+      uint16_t address;
+      int return_value_1 = pop(&address);
+      if (return_value_1 != SUCCESS)
+        return return_value_1;
+      int16_t value = memory[memory[address]];
+      return push(value);
     }
     case NO_STORS:
     {
+      uint16_t address;
+      int return_value_1 = pop(&address);
+      if (return_value_1 != SUCCESS)
+        return return_value_1;
+      int16_t value;
+      int return_value_2 = pop(&value);
+      if (return_value_2 != SUCCESS)
+        return return_value_2;
+      memory[address] = value;
+      return SUCCESS;
     }
     case NO_STORSI:
     {
+      uint16_t address;
+      int return_value_1 = pop(&address);
+      if (return_value_1 != SUCCESS)
+        return return_value_1;
+      int16_t value;
+      int return_value_2 = pop(&value);
+      if (return_value_2 != SUCCESS)
+        return return_value_2;
+      memory[memory[address]] = value;
+      return SUCCESS;
     }
     default:
     {
