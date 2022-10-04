@@ -70,20 +70,20 @@ enum return_codes
 };
 
 // Needed for one and two stack args function calls
-int16_t f_add(int16_t a, int16_t b) return a + b;
-int16_t f_subtract(int16_t a, int16_t b) return a - b;
-int16_t f_multiply(int16_t a, int16_t b) return (int16_t)a * b;
-int16_t f_divide(int16_t a, int16_t b) return a / b;
-int16_t f_mod(int16_t a, int16_t b) return a % b;
-int16_t f_and(int16_t a, int16_t b) return a & b;
-int16_t f_or(int16_t a, int16_t b) return a | b;
-int16_t f_not(int16_t a) return ~a;
-int16_t f_left_shift(int16_t a, int16_t b) return a << b;
-int16_t f_right_shift(int16_t a, int16_t b) return a >> b;
+inline int16_t f_add(int16_t a, int16_t b) { return a + b; };
+inline int16_t f_subtract(int16_t a, int16_t b) { return a - b; };
+inline int16_t f_multiply(int16_t a, int16_t b) { return (int16_t)a * b; };
+inline int16_t f_divide(int16_t a, int16_t b) { return a / b; };
+inline int16_t f_mod(int16_t a, int16_t b) { return a % b; };
+inline int16_t f_and(int16_t a, int16_t b) { return a & b; };
+inline int16_t f_or(int16_t a, int16_t b) { return a | b; };
+inline int16_t f_not(int16_t a) { return ~a; };
+inline int16_t f_left_shift(int16_t a, int16_t b) { return a << b; };
+inline int16_t f_right_shift(int16_t a, int16_t b) { return a >> b; };
 
 // Helper functions to grab lo and hi bits of 32-bit integer
-uint16_t lo(uint32_t n) return n & (0xFFFF);
-uint16_t hi(uint32_t n) return (n >> 16) & (0xFFFF);
+inline uint16_t lo(uint32_t n) { return n & (0xFFFF); };
+inline uint16_t hi(uint32_t n) { return (n >> 16) & (0xFFFF); };
 
 int push(int16_t n);
 
