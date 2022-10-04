@@ -1,15 +1,45 @@
 Stack-Based Architecture
 
-Initializes an empty stack, instruction pointer, stack pointer
+Memory:
+  0x0000 to 0x7FFF is the instruction and user memory.
+  0x8000 to 0xFFFF is the stack memory.
+  Stack pointer is intialized to 0xFFFF (bottom of stack) and grows down.
+
+Initializes an empty memory array, instruction pointer (starts at 0x0000), stack pointer (starts at 0xFFFF), stack-base pointer (starts at 0xFFFF).
+
+NEED TO WORRY ABOUT STACK OVERFLOW
 
 Instructions Needed:
- - Push
- - Pop
- - Store
- - Add
- - Sub
- - Mult
- - Div
- - Mod
- - Jump
- - Branch
+  Operand Instructions:
+    PUSH:     Pushes 13-bit immediate value onto the stack
+    LOAD:     Loads the value stored at the 13-bit immediate index in memory onto the stack
+    STOR:     Stores the value on the top of the stack to the 13-bit immediate index in memory
+    JMP:      Jumps to the 13-bit immediate value from the start of the instruction data
+    BR:       Jumps if the conditional flag is true
+    SWAP:     Swaps the TOS with the value on the stack n positions below it, where n is the 13-bit immediate value
+    TRAP:     Executes based on the given trap code
+    NO:       Executes based on the no-operand instruction code
+  No Operand Instructions:
+    POP:      Pops off the top value from the stack
+    ADD:      Pops two values, adds them together, pushes the result onto the stack
+    SUB:      Pops two values, subtracts the second from the first, pushes the result onto the stack
+    MULT:     Pops two values, multiplies them, pushes the result onto the stack
+    MULTC:    Pops two values, multiplies them with carrying, pushes the two values onto the stack
+    DIV:      Pops two values, divides the first by the second, pushes the quotient onto the stack
+    MOD:      Pops two values, divides the first by the second, pushes the remainder onto the stack
+    AND:      Pops two values, computes the bitwise AND, pushes the result onto the stack
+    OR:       Pops two values, computes the bitwise OR, pushes the result onto the stack
+    NOT:      Pops one value, computes the bitwise inverse, pushes the result onto the stack
+    SHFTL:    Pops two values, shift the first by the second number of bits, pushes the result onto the stack
+    SHFTR:    Pops two values, shift the first by the second number of bits, pushes the result onto the stack
+    DUP:      Duplicates the top of the stack
+    SWAPS:    Pops one value to use as n, swaps the TOS with the stack element n values below it
+    IP:       Pushes the instruction pointer onto the stack
+    LOADS:    Pops one value, uses this as the address, loads that part of memory onto the stack
+    LOADSI:   Pops one value, uses this as the address, loads where that memory points to onto the stack
+    STORS:    Pops one value, uses this as the address, pops another value and places it in memory at the address
+    STORSI:   Pops one value, uses this as the address, pops another value and places it in memory at the address that the first value's memory holds
+
+
+Machine Code File Design:
+ - First two bytes is the origin where the code 
