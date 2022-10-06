@@ -1,6 +1,4 @@
-clean folder
+refactor the code to use the VM struct
 
 create unit test .c file
 unit testing!
-
-finish refactoring

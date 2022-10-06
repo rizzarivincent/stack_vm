@@ -5,9 +5,9 @@
 #include <stdint.h>
 
 #define MEMORY_MAX (1 << 16)
-#define INSTRUCTION_START 0
-#define STACK_START ((1 << 16) - 1)
-#define STACK_END (1 << 15)
+#define INSTRUCTION_START (0x3000)
+#define STACK_START (0xFFFF)
+#define STACK_END (0x8000)
 
 #define FALSE (0)
 #define TRUE (1)
@@ -16,6 +16,15 @@
   int return_value;                              \
   if ((return_value = FUNCTION_CALL) != SUCCESS) \
     return return_value;
+
+struct StackVM
+{
+  int16_t memory[MEMORY_MAX];
+  uint16_t reg[2];
+  int c_flag = FALSE;
+};
+
+struct StackVM init_stack_vm(struct StackVM *vm);
 
 struct Pair
 {
@@ -62,7 +71,8 @@ enum no_operation_instructions
   NO_STORS,
   NO_STORSI,
   NO_JUMPS,
-  NO_BRS
+  NO_BRS,
+  NO_RET
 };
 
 enum trap_codes
@@ -75,8 +85,7 @@ enum trap_codes
 enum registers
 {
   IP = 0,
-  SP,
-  BP
+  SP
 };
 
 enum return_codes
@@ -88,7 +97,8 @@ enum return_codes
   INVALID_ARGUMENT_ERROR,
   DIVISION_BY_ZERO_ERROR,
   INVALID_INSTRUCTION_ERROR,
-  EXCEPTION
+  EXCEPTION,
+  RETURN
 };
 
 // Needed for one and two stack args function calls
@@ -112,32 +122,26 @@ inline int16_t f_leq(int16_t a, int16_t b) { return a <= b; };
 inline uint16_t lo(uint32_t n) { return n & (0xFFFF); };
 inline uint16_t hi(uint32_t n) { return (n >> 16) & (0xFFFF); };
 
-int push(int16_t n);
-
-int pop(int16_t *n);
-
-int pop2(struct Pair *p);
-
-int peek(int16_t *n);
-
-int peek2(struct Pair *p);
-
-int swap(uint16_t n);
-
+// Helper to sign extend a number from num_bits bits to 16 bits
 int16_t sign_extend(uint16_t n, unsigned int num_bits);
 
-int one_arg_call(int16_t (*f)(int16_t));
+// Functions which directly access the stack
+int push(struct StackVM *vm, int16_t n);
+int pop(struct StackVM *vm, int16_t *n);
+int pop2(struct StackVM *vm, struct Pair *p);
+int peek(struct StackVM *vm, int16_t *n);
+int peek2(struct StackVM *vm, struct Pair *p);
+int swap(struct StackVM *vm, uint16_t n);
 
-int two_arg_call(int16_t (*f)(int16_t, int16_t));
+// Functions which pop/peek one/two arguments off of the stack and push/change c_flag based on the output of the passed function
+int one_arg_call(struct StackVM *vm, int16_t (*f)(int16_t));
+int two_arg_call(struct StackVM *vm, int16_t (*f)(int16_t, int16_t));
+int two_arg_peek_call(struct StackVM *vm, int16_t (*f)(int16_t, int16_t));
+int two_arg_peek_comp(struct StackVM *vm, int16_t (*f)(int16_t, int16_t));
 
-int two_arg_peek_call(int16_t (*f)(int16_t, int16_t));
-
-int two_arg_peek_comp(int16_t (*f)(int16_t, int16_t));
-
-int handle_instruction(uint16_t instruction);
-
+// Functions to grab the file from user input
+int handle_instruction(struct StackVM *vm, uint16_t instruction);
 unsigned int program_length(FILE *file);
-
 void fetch_instructions(FILE *file, uint16_t *data, unsigned int length);
 
 #endif
