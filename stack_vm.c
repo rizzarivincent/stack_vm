@@ -2,6 +2,7 @@
 
 int16_t memory[MEMORY_MAX];
 uint16_t reg[3];
+int c_flag = FALSE;
 
 int push(int16_t n)
 {
@@ -19,12 +20,12 @@ int pop(int16_t *n)
   return SUCCESS;
 }
 
-int pop2(int16_t *n, int16_t *m)
+int pop2(struct Pair *p)
 {
   if (reg[SP] >= (STACK_START - 1))
     return EMPTY_STACK_ERROR;
-  *n = memory[++reg[SP]];
-  *m = memory[++reg[SP]];
+  p->a = memory[++reg[SP]];
+  p->b = memory[++reg[SP]];
   return SUCCESS;
 }
 
@@ -33,6 +34,15 @@ int peek(int16_t *n)
   if (reg[SP] >= STACK_START)
     return EMPTY_STACK_ERROR;
   *n = memory[reg[SP] + 1];
+  return SUCCESS;
+}
+
+int peek2(struct Pair *p)
+{
+  if (reg[SP] >= (STACK_START - 1))
+    return EMPTY_STACK_ERROR;
+  p->a = memory[reg[SP] + 1];
+  p->b = memory[reg[SP] + 2];
   return SUCCESS;
 }
 
@@ -57,17 +67,37 @@ int16_t sign_extend(uint16_t n, unsigned int num_bits)
   return n;
 }
 
-int one_arg_no_operand(int16_t (*f)(int16_t))
-{
-}
-
-int two_args_no_operand(int16_t (*f)(int16_t, int16_t))
+int one_arg_call(int16_t (*f)(int16_t))
 {
   int16_t a;
-  int16_t b;
-  int return_value = pop2(&a, &b);
-  push(f(a, b));
-  return return_value;
+  int16_t value;
+  RETURN_CHECK(pop(&a));
+  RETURN_CHECK(push(f(a)));
+  return SUCCESS;
+}
+
+int two_arg_call(int16_t (*f)(int16_t, int16_t))
+{
+  struct Pair *p;
+  RETURN_CHECK(pop2(p));
+  RETURN_CHECK(push(f(p->a, p->b)));
+  return SUCCESS;
+}
+
+int two_arg_peek_call(int16_t (*f)(int16_t, int16_t))
+{
+  struct Pair *p;
+  RETURN_CHECK(peek2(p));
+  RETURN_CHECK(push(f(p->a, p->b)));
+  return SUCCESS;
+}
+
+int two_arg_peek_comp(int16_t (*f)(int16_t, int16_t))
+{
+  struct Pair *p;
+  RETURN_CHECK(peek2(p));
+  c_flag = f(p->a, p->b);
+  return SUCCESS;
 }
 
 int handle_instruction(uint16_t instruction)
@@ -96,9 +126,9 @@ int handle_instruction(uint16_t instruction)
   {
     uint16_t addr13 = operand;
     int16_t value;
-    int return_value = pop(&value);
+    RETURN_CHECK(pop(&value));
     memory[addr13] = value;
-    return return_value;
+    return SUCCESS;
   }
 
   // Moves the instruction pointer to the address specified by the immediate value
@@ -113,10 +143,8 @@ int handle_instruction(uint16_t instruction)
   case OP_BR:
   {
     uint16_t addr13 = operand;
-    if (1)
-    {
+    if (c_flag == TRUE)
       reg[IP] = addr13;
-    }
     return SUCCESS;
   }
 
@@ -134,14 +162,21 @@ int handle_instruction(uint16_t instruction)
     {
     case TRAP_GETC:
     {
+      char input = (char)getchar();
+      RETURN_CHECK(push(input));
     }
 
     case TRAP_PUTC:
     {
+      int16_t output;
+      RETURN_CHECK(pop(&output));
+      output &= 0x00FF; // Zero out the top 8 bits
+      putchar((char)output);
     }
 
     case TRAP_HALT:
     {
+      return EXCEPTION;
     }
     }
   }
@@ -154,121 +189,149 @@ int handle_instruction(uint16_t instruction)
     case NO_POP:
     {
       int16_t a;
-      return pop(&a);
+      RETURN_CHECK(pop(&a));
+      return SUCCESS;
     }
     case NO_ADD:
     {
-      return two_args_no_operand(f_add);
+      return two_arg_call(f_add);
     }
     case NO_SUB:
     {
-      return two_args_no_operand(f_subtract);
+      return two_arg_call(f_subtract);
     }
     case NO_MULT:
     {
-      return two_args_no_operand(f_multiply);
+      return two_arg_call(f_multiply);
     }
     case NO_MULTC:
     {
-      int16_t a;
-      int16_t b;
-      int return_value = pop2(&a, &b);
-      if (return_value != SUCCESS)
-        return return_value;
-      int32_t result = a * b;
+      struct Pair *p;
+      RETURN_CHECK(pop2(p));
+      int32_t result = p->a * p->b;
       int16_t hi_result = (int16_t)hi((uint32_t)result);
       int16_t lo_result = (int16_t)lo((uint32_t)result);
-      push(hi_result);
-      push(lo_result);
+      RETURN_CHECK(push(hi_result));
+      RETURN_CHECK(push(lo_result));
       return SUCCESS;
     }
     case NO_DIV:
     {
-      return two_args_no_operand(f_divide);
+      struct Pair *p;
+      RETURN_CHECK(pop(p));
+      if (p->b == 0)
+        return DIVISION_BY_ZERO_ERROR;
+      RETURN_CHECK(push(p->a / p->b));
+      return SUCCESS;
     }
     case NO_MOD:
     {
-      return two_args_no_operand(f_mod);
+      struct Pair *p;
+      RETURN_CHECK(pop(p));
+      if (p->b == 0)
+        return DIVISION_BY_ZERO_ERROR;
+      RETURN_CHECK(push(p->a % p->b));
+      return SUCCESS;
     }
     case NO_AND:
     {
-      return two_args_no_operand(f_and);
+      return two_arg_call(f_and);
     }
     case NO_OR:
     {
-      return two_args_no_operand(f_or);
+      return two_arg_call(f_or);
     }
     case NO_NOT:
     {
-      return one_arg_no_operand(f_not);
+      return one_arg_call(f_not);
     }
     case NO_SHFTL:
     {
-      return two_args_no_operand(f_left_shift);
+      return two_arg_call(f_left_shift);
     }
     case NO_SHFTR:
     {
-      return two_args_no_operand(f_right_shift);
+      return two_arg_call(f_right_shift);
+    }
+    case NO_EQ:
+    {
+      return two_arg_peek_comp(f_equals);
+    }
+    case NO_LT:
+    {
+      return two_arg_peek_comp(f_less_than);
+    }
+    case NO_GT:
+    {
+      return two_arg_peek_comp(f_greater_than);
+    }
+    case NO_LEQ:
+    {
+      return two_arg_peek_comp(f_leq);
+    }
+    case NO_GEQ:
+    {
+      return two_arg_peek_comp(f_geq);
     }
     case NO_DUP:
     {
       int16_t a;
-      int return_value_1 = pop(&a);
-      if (return_value_1 != SUCCESS)
-        return return_value_1;
-      push(a);
-      return push(a);
+      RETURN_CHECK(peek(&a));
+      RETURN_CHECK(push(a));
+      return SUCCESS;
     }
     case NO_SWAPS:
     {
       uint16_t n;
-      int return_value_1 = pop(&n);
-      if (return_value_1 != SUCCESS)
-        return return_value_1;
-      return swap(n);
+      RETURN_CHECK(pop(&n));
+      RETURN_CHECK(swap(n));
+      return SUCCESS;
     }
     case NO_LOADS:
     {
       uint16_t address;
-      int return_value_1 = pop(&address);
-      if (return_value_1 != SUCCESS)
-        return return_value_1;
+      RETURN_CHECK(pop(&address));
       int16_t value = memory[address];
       return push(value);
     }
     case NO_LOADSI:
     {
       uint16_t address;
-      int return_value_1 = pop(&address);
-      if (return_value_1 != SUCCESS)
-        return return_value_1;
+      RETURN_CHECK(pop(&address));
       int16_t value = memory[memory[address]];
       return push(value);
     }
     case NO_STORS:
     {
-      uint16_t address;
-      int return_value_1 = pop(&address);
-      if (return_value_1 != SUCCESS)
-        return return_value_1;
-      int16_t value;
-      int return_value_2 = pop(&value);
-      if (return_value_2 != SUCCESS)
-        return return_value_2;
+      struct Pair *p;
+      RETURN_CHECK(pop2(p));
+      int16_t address = p->a;
+      int16_t value = p->b;
       memory[address] = value;
       return SUCCESS;
     }
     case NO_STORSI:
     {
-      uint16_t address;
-      int return_value_1 = pop(&address);
-      if (return_value_1 != SUCCESS)
-        return return_value_1;
-      int16_t value;
-      int return_value_2 = pop(&value);
-      if (return_value_2 != SUCCESS)
-        return return_value_2;
+      struct Pair *p;
+      RETURN_CHECK(pop2(p));
+      int16_t address = p->a;
+      int16_t value = p->b;
       memory[memory[address]] = value;
+      return SUCCESS;
+    }
+    case NO_JUMPS:
+    {
+      uint16_t address;
+      RETURN_CHECK(pop(&address));
+      reg[IP] = address;
+      return SUCCESS;
+    }
+    case NO_BRS:
+    {
+      uint16_t address;
+      RETURN_CHECK(pop(&address));
+      if (c_flag == TRUE)
+        reg[IP] = address;
       return SUCCESS;
     }
     default:

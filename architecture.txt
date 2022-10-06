@@ -32,6 +32,11 @@ Instructions Needed:
     NOT:      Pops one value, computes the bitwise inverse, pushes the result onto the stack
     SHFTL:    Pops two values, shift the first by the second number of bits, pushes the result onto the stack
     SHFTR:    Pops two values, shift the first by the second number of bits, pushes the result onto the stack
+    EQ:       Pops two values, sets the CF to true if a == b, pushes values back onto stack
+    LT:       Pops two values, sets the CF to true if  a < b, pushes values back onto stack
+    GT:       Pops two values, sets the CF to true if  a > b, pushes values back onto stack
+    LEQ:      Pops two values, sets the CF to true if a <= b, pushes values back onto stack
+    GEQ:      Pops two values, sets the CF to true if a >= b, pushes values back onto stack
     DUP:      Duplicates the top of the stack
     SWAPS:    Pops one value to use as n, swaps the TOS with the stack element n values below it
     IP:       Pushes the instruction pointer onto the stack
@@ -39,6 +44,8 @@ Instructions Needed:
     LOADSI:   Pops one value, uses this as the address, loads where that memory points to onto the stack
     STORS:    Pops one value, uses this as the address, pops another value and places it in memory at the address
     STORSI:   Pops one value, uses this as the address, pops another value and places it in memory at the address that the first value's memory holds
+    JUMPS:    Pops one value, sets IP to this value
+    BRS:      Pops one value, sets IP to this value if the conditional flag is set to true
 
 
 Machine Code File Design:

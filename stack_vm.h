@@ -9,6 +9,20 @@
 #define STACK_START ((1 << 16) - 1)
 #define STACK_END (1 << 15)
 
+#define FALSE (0)
+#define TRUE (1)
+
+#define RETURN_CHECK(FUNCTION_CALL)              \
+  int return_value;                              \
+  if ((return_value = FUNCTION_CALL) != SUCCESS) \
+    return return_value;
+
+struct Pair
+{
+  int16_t a;
+  int16_t b;
+};
+
 enum instructions
 {
   OP_PUSH = 0,
@@ -35,13 +49,20 @@ enum no_operation_instructions
   NO_NOT,
   NO_SHFTL,
   NO_SHFTR,
+  NO_EQ,
+  NO_LT,
+  NO_GT,
+  NO_LEQ,
+  NO_GEQ,
   NO_DUP,
   NO_SWAPS,
   NO_IP,
   NO_LOADS,
   NO_LOADSI,
   NO_STORS,
-  NO_STORSI
+  NO_STORSI,
+  NO_JUMPS,
+  NO_BRS
 };
 
 enum trap_codes
@@ -66,7 +87,8 @@ enum return_codes
   STACK_TOO_SMALL_ERROR,
   INVALID_ARGUMENT_ERROR,
   DIVISION_BY_ZERO_ERROR,
-  INVALID_INSTRUCTION_ERROR
+  INVALID_INSTRUCTION_ERROR,
+  EXCEPTION
 };
 
 // Needed for one and two stack args function calls
@@ -78,8 +100,13 @@ inline int16_t f_mod(int16_t a, int16_t b) { return a % b; };
 inline int16_t f_and(int16_t a, int16_t b) { return a & b; };
 inline int16_t f_or(int16_t a, int16_t b) { return a | b; };
 inline int16_t f_not(int16_t a) { return ~a; };
-inline int16_t f_left_shift(int16_t a, int16_t b) { return a << b; };
+inline int16_t f_left_shift(int16_t a, int16_t b) { return (a << b); };
 inline int16_t f_right_shift(int16_t a, int16_t b) { return a >> b; };
+inline int16_t f_equals(int16_t a, int16_t b) { return a == b; };
+inline int16_t f_greater_than(int16_t a, int16_t b) { return a > b; };
+inline int16_t f_less_than(int16_t a, int16_t b) { return a < b; };
+inline int16_t f_geq(int16_t a, int16_t b) { return a >= b; };
+inline int16_t f_leq(int16_t a, int16_t b) { return a <= b; };
 
 // Helper functions to grab lo and hi bits of 32-bit integer
 inline uint16_t lo(uint32_t n) { return n & (0xFFFF); };
@@ -89,17 +116,23 @@ int push(int16_t n);
 
 int pop(int16_t *n);
 
-int pop2(int16_t *n, int16_t *m);
+int pop2(struct Pair *p);
 
 int peek(int16_t *n);
+
+int peek2(struct Pair *p);
 
 int swap(uint16_t n);
 
 int16_t sign_extend(uint16_t n, unsigned int num_bits);
 
-int one_arg_no_operand(int16_t (*f)(int16_t));
+int one_arg_call(int16_t (*f)(int16_t));
 
-int two_args_no_operand(int16_t (*f)(int16_t, int16_t));
+int two_arg_call(int16_t (*f)(int16_t, int16_t));
+
+int two_arg_peek_call(int16_t (*f)(int16_t, int16_t));
+
+int two_arg_peek_comp(int16_t (*f)(int16_t, int16_t));
 
 int handle_instruction(uint16_t instruction);
 
