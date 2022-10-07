@@ -104,25 +104,25 @@ enum return_codes
 };
 
 // Needed for one and two stack args function calls
-static inline int16_t f_add(int16_t a, int16_t b) { return a + b; };
-static inline int16_t f_subtract(int16_t a, int16_t b) { return a - b; };
-static inline int16_t f_multiply(int16_t a, int16_t b) { return (int16_t)a * b; };
-static inline int16_t f_divide(int16_t a, int16_t b) { return a / b; };
-static inline int16_t f_mod(int16_t a, int16_t b) { return a % b; };
-static inline int16_t f_and(int16_t a, int16_t b) { return a & b; };
-static inline int16_t f_or(int16_t a, int16_t b) { return a | b; };
-static inline int16_t f_not(int16_t a) { return ~a; };
-static inline int16_t f_left_shift(int16_t a, int16_t b) { return (a << b); };
-static inline int16_t f_right_shift(int16_t a, int16_t b) { return a >> b; };
-static inline int16_t f_equals(int16_t a, int16_t b) { return a == b; };
-static inline int16_t f_greater_than(int16_t a, int16_t b) { return a > b; };
-static inline int16_t f_less_than(int16_t a, int16_t b) { return a < b; };
-static inline int16_t f_geq(int16_t a, int16_t b) { return a >= b; };
-static inline int16_t f_leq(int16_t a, int16_t b) { return a <= b; };
+static inline int16_t f_add(int16_t a, int16_t b) { return a + b; }
+static inline int16_t f_subtract(int16_t a, int16_t b) { return a - b; }
+static inline int16_t f_multiply(int16_t a, int16_t b) { return (int16_t)a * b; }
+static inline int16_t f_divide(int16_t a, int16_t b) { return a / b; }
+static inline int16_t f_mod(int16_t a, int16_t b) { return a % b; }
+static inline int16_t f_and(int16_t a, int16_t b) { return a & b; }
+static inline int16_t f_or(int16_t a, int16_t b) { return a | b; }
+static inline int16_t f_not(int16_t a) { return ~a; }
+static inline int16_t f_left_shift(int16_t a, int16_t b) { return (a << b); }
+static inline int16_t f_right_shift(int16_t a, int16_t b) { return a >> b; }
+static inline int16_t f_equals(int16_t a, int16_t b) { return a == b; }
+static inline int16_t f_greater_than(int16_t a, int16_t b) { return a > b; }
+static inline int16_t f_less_than(int16_t a, int16_t b) { return a < b; }
+static inline int16_t f_geq(int16_t a, int16_t b) { return a >= b; }
+static inline int16_t f_leq(int16_t a, int16_t b) { return a <= b; }
 
 // Helper functions to grab lo and hi bits of 32-bit integer
-static inline uint16_t lo(uint32_t n) { return n & (0xFFFF); };
-static inline uint16_t hi(uint32_t n) { return (n >> 16) & (0xFFFF); };
+static inline uint16_t lo(uint32_t n) { return n & (0xFFFF); }
+static inline uint16_t hi(uint32_t n) { return (n >> 16) & (0xFFFF); }
 
 // Helper to sign extend a number from num_bits bits to 16 bits
 int16_t sign_extend(uint16_t n, unsigned int num_bits);

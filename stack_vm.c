@@ -285,23 +285,23 @@ int handle_instruction(struct StackVM *vm, uint16_t instruction)
     }
     case NO_SWAPS:
     {
-      uint16_t n;
+      int16_t n;
       RETURN_CHECK(pop(vm, &n));
-      RETURN_CHECK(swap(vm, n));
+      RETURN_CHECK(swap(vm, (uint16_t)n));
       return SUCCESS;
     }
     case NO_LOADS:
     {
-      uint16_t address;
+      int16_t address;
       RETURN_CHECK(pop(vm, &address));
-      int16_t value = vm->memory[address];
+      int16_t value = vm->memory[(uint16_t)address];
       return push(vm, value);
     }
     case NO_LOADSI:
     {
-      uint16_t address;
+      int16_t address;
       RETURN_CHECK(pop(vm, &address));
-      int16_t value = vm->memory[vm->memory[address]];
+      int16_t value = vm->memory[vm->memory[(uint16_t)address]];
       return push(vm, value);
     }
     case NO_STORS:
@@ -310,7 +310,7 @@ int handle_instruction(struct StackVM *vm, uint16_t instruction)
       RETURN_CHECK(pop2(vm, p));
       int16_t address = p->a;
       int16_t value = p->b;
-      vm->memory[address] = value;
+      vm->memory[(uint16_t)address] = (uint16_t)value;
       return SUCCESS;
     }
     case NO_STORSI:
@@ -319,22 +319,22 @@ int handle_instruction(struct StackVM *vm, uint16_t instruction)
       RETURN_CHECK(pop2(vm, p));
       int16_t address = p->a;
       int16_t value = p->b;
-      vm->memory[vm->memory[address]] = value;
+      vm->memory[vm->memory[(uint16_t)address]] = (uint16_t)value;
       return SUCCESS;
     }
     case NO_JUMPS:
     {
-      uint16_t address;
+      int16_t address;
       RETURN_CHECK(pop(vm, &address));
-      vm->reg[IP] = address;
+      vm->reg[IP] = (uint16_t)address;
       return SUCCESS;
     }
     case NO_BRS:
     {
-      uint16_t address;
+      int16_t address;
       RETURN_CHECK(pop(vm, &address));
       if (vm->c_flag == TRUE)
-        vm->reg[IP] = address;
+        vm->reg[IP] = (uint16_t)address;
       return SUCCESS;
     }
     case NO_RET:

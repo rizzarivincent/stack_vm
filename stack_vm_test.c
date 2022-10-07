@@ -3,18 +3,18 @@
 int push_one_value()
 {
   BEFORE();
-  ASSERT_EQ(push(vm, 1), SUCCESS);
-  ASSERT_EQ(vm->memory[vm->reg[SP] + 1], 13);
+  ASSERT_EQ(push(&vm, 13), SUCCESS);
+  ASSERT_EQ(vm.memory[vm.reg[SP] + 1], 13);
   AFTER();
 }
 
 int push_two_values()
 {
   BEFORE();
-  ASSERT_EQ(push(vm, 5), SUCCESS);
-  ASSERT_EQ(push(vm, 7), SUCCESS);
-  ASSERT_EQ(vm->memory[vm->reg[SP] + 1], 7);
-  ASSERT_EQ(vm->memory[vm->reg[SP] + 2], 5);
+  ASSERT_EQ(push(&vm, 5), SUCCESS);
+  ASSERT_EQ(push(&vm, 7), SUCCESS);
+  ASSERT_EQ(vm.memory[vm.reg[SP] + 1], 7);
+  ASSERT_EQ(vm.memory[vm.reg[SP] + 2], 5);
   AFTER();
 }
 int push_and_pop_one_value();

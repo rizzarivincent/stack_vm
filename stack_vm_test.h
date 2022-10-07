@@ -11,21 +11,22 @@ enum assert_codes
 
 #define RUN_TEST()
 
-#define BEFORE()      \
-  struct StackVM *vm; \
-  init_stack_vm(vm);  \
-  int assert_counter = 0;
+#define BEFORE()          \
+  struct StackVM vm;      \
+  init_stack_vm(&vm);     \
+  int assert_counter = 0; \
+  printf("Beginning test: %s\n", __func__);
 
 #define AFTER()             \
   printf("Test passed!\n"); \
   return PASS;
 
-#define ASSERT_EQ(a, b)                                   \
-  assert_counter++;                                       \
-  if ((a) != (b))                                         \
-  {                                                       \
-    printf("Failed assert number %d.\n", assert_counter); \
-    return FAIL;                                          \
+#define ASSERT_EQ(a, b)                                                  \
+  assert_counter++;                                                      \
+  if ((a) != (b))                                                        \
+  {                                                                      \
+    printf("Failed assert number %d: %d != %d\n", assert_counter, a, b); \
+    return FAIL;                                                         \
   }
 
 // Testing push, pop, peek normal functions

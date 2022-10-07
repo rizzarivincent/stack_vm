@@ -1,3 +1,5 @@
-Makefile bullshit
+Change vm obj to be a real and not a pointer, pass a reference to it to all the functions.
+
+Fix Makefile
 
 unit testing!
