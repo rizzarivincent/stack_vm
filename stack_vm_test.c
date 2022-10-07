@@ -222,6 +222,24 @@ int push_pop_twice_empty_stack_exception()
   int16_t n;
   pop(&vm, &n);
   ASSERT_EQ(pop(&vm, &n), EMPTY_STACK_ERROR);
+  AFTER();
+}
+
+int swap_stack_too_small_exception()
+{
+  BEFORE();
+  ASSERT_EQ(swap(&vm, 1), STACK_TOO_SMALL_ERROR);
+  ASSERT_EQ(swap(&vm, 5), STACK_TOO_SMALL_ERROR);
+  AFTER();
+}
+
+int push_swap_stack_too_small_exception()
+{
+  BEFORE();
+  push(&vm, 6);
+  ASSERT_EQ(swap(&vm, 1), STACK_TOO_SMALL_ERROR);
+  ASSERT_EQ(swap(&vm, 7), STACK_TOO_SMALL_ERROR);
+  AFTER();
 }
 
 int main()
@@ -246,5 +264,7 @@ int main()
   push_pop2_empty_stack_exception();
   push_peek2_empty_stack_exception();
   push_pop_twice_empty_stack_exception();
+  swap_stack_too_small_exception();
+  push_swap_stack_too_small_exception();
   return 0;
 }

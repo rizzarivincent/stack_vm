@@ -134,6 +134,8 @@ int pop2(struct StackVM *vm, struct Pair *p);
 int peek(struct StackVM *vm, int16_t *n);
 int peek2(struct StackVM *vm, struct Pair *p);
 int swap(struct StackVM *vm, uint16_t n);
+int load(struct StackVM *vm, uint16_t address);
+int store(struct StackVM *vm, uint16_t address, int16_t value);
 
 // Functions which pop/peek one/two arguments off of the stack and push/change c_flag based on the output of the passed function
 int one_arg_call(struct StackVM *vm, int16_t (*f)(int16_t));

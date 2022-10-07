@@ -63,6 +63,18 @@ int swap(struct StackVM *vm, uint16_t n)
   return SUCCESS;
 }
 
+int load(struct StackVM *vm, uint16_t address)
+{
+  int16_t value = vm->memory[address];
+  return push(vm, value);
+}
+
+int store(struct StackVM *vm, uint16_t address, int16_t value)
+{
+  vm->memory[address] = value;
+  return SUCCESS;
+}
+
 int16_t sign_extend(uint16_t n, unsigned int num_bits)
 {
   if ((n >> (num_bits - 1)) & 1)

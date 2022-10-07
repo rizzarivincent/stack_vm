@@ -55,5 +55,56 @@ int push_peek2_empty_stack_exception();
 int push_pop_twice_empty_stack_exception();
 int swap_empty_stack_exception();
 int push_swap_empty_stack_exception();
+int swap_stack_too_small_exception();
+int push_swap_stack_too_small_exception();
+// Testing PUSH
+int PUSH_one();
+int PUSH_two();
+int PUSH_many_values();
+int PUSH_many_values_exception();
+// Testing LOAD
+int LOAD_one();
+int LOAD_many_values_exception();
+// Testing STORE
+int STORE_one();
+int STORE_two();
+int STORE_twice_same_address();
+// Testing SWAP
+int SWAP_one();
+int SWAP_two();
+int SWAP_stack_too_small_exception();
+// Testing JMP
+int JMP_once();
+int JMP_twice();
+// Testing BR
+int BR_true_jump();
+int BR_false_no_jump();
+// Testing ADD
+int push_two_ADD();
+int push_three_ADD_twice();
+int ADD_two_large_pos_values();
+int ADD_two_large_neg_values();
+// Testing SUB
+int push_two_SUB();
+int push_three_SUB_twice();
+int SUB_neg_from_pos();
+int SUB_pos_from_neg();
+int SUB_pos_from_pos_pos_result();
+int SUB_pos_from_pos_neg_result();
+int SUB_neg_from_neg_pos_result();
+int SUB_neg_from_neg_neg_result();
+// Testing MULT
+int push_two_MULT();
+int push_three_MULT_twice();
+int MULT_pos_by_pos();
+int MULT_pos_by_neg();
+int MULT_neg_by_pos();
+int MULT_neg_by_neg();
+int MULT_two_large_values();
+// Testing MULTC
+
+// Testing DIV
+
+// Testing MOD
 
 #endif
