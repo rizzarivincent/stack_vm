@@ -123,6 +123,37 @@ int push_and_pop_many_values()
   AFTER();
 }
 
+int push_two_and_swap()
+{
+  BEFORE();
+  push(&vm, 2);
+  push(&vm, 90);
+  ASSERT_EQ(swap(&vm, 1), SUCCESS);
+  int16_t n1, n2;
+  ASSERT_EQ(pop(&vm, &n1), SUCCESS);
+  ASSERT_EQ(pop(&vm, &n2), SUCCESS);
+  ASSERT_EQ(n1, 2);
+  ASSERT_EQ(n2, 90);
+  AFTER();
+}
+
+int push_three_and_swap()
+{
+  BEFORE();
+  push(&vm, 10);
+  push(&vm, 20);
+  push(&vm, 30);
+  ASSERT_EQ(swap(&vm, 2), SUCCESS);
+  int16_t n1, n2, n3;
+  ASSERT_EQ(pop(&vm, &n1), SUCCESS);
+  ASSERT_EQ(pop(&vm, &n2), SUCCESS);
+  ASSERT_EQ(pop(&vm, &n3), SUCCESS);
+  ASSERT_EQ(n1, 10);
+  ASSERT_EQ(n2, 20);
+  ASSERT_EQ(n3, 30);
+  AFTER();
+}
+
 int push_too_many_values_exception()
 {
   BEFORE();
@@ -205,6 +236,8 @@ int main()
   push_two_values_peek2();
   push_many_values();
   push_and_pop_many_values();
+  push_two_and_swap();
+  push_three_and_swap();
   push_too_many_values_exception();
   pop_empty_stack_exception();
   pop2_empty_stack_exception();
