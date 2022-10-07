@@ -1,4 +1,3 @@
-refactor the code to use the VM struct
+Makefile bullshit
 
-create unit test .c file
 unit testing!

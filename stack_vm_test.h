@@ -3,13 +3,30 @@
 #ifndef STACK_VM_TEST_H
 #define STACK_VM_TEST_H
 
-#define ASSERT_EQ(a, b) \
-  if (a != b)           \
-    return 1;
+enum assert_codes
+{
+  PASS = 0,
+  FAIL
+};
+
+#define RUN_TEST()
 
 #define BEFORE()      \
   struct StackVM *vm; \
-  init_stack_vm(vm);
+  init_stack_vm(vm);  \
+  int assert_counter = 0;
+
+#define AFTER()             \
+  printf("Test passed!\n"); \
+  return PASS;
+
+#define ASSERT_EQ(a, b)                                   \
+  assert_counter++;                                       \
+  if ((a) != (b))                                         \
+  {                                                       \
+    printf("Failed assert number %d.\n", assert_counter); \
+    return FAIL;                                          \
+  }
 
 // Testing push, pop, peek normal functions
 int push_one_value();

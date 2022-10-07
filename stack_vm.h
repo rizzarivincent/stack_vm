@@ -12,16 +12,18 @@
 #define FALSE (0)
 #define TRUE (1)
 
-#define RETURN_CHECK(FUNCTION_CALL)              \
-  int return_value;                              \
-  if ((return_value = FUNCTION_CALL) != SUCCESS) \
-    return return_value;
+#define RETURN_CHECK(FUNCTION_CALL)                \
+  {                                                \
+    int return_value;                              \
+    if ((return_value = FUNCTION_CALL) != SUCCESS) \
+      return return_value;                         \
+  }
 
 struct StackVM
 {
   int16_t memory[MEMORY_MAX];
   uint16_t reg[2];
-  int c_flag = FALSE;
+  int c_flag;
 };
 
 struct StackVM init_stack_vm(struct StackVM *vm);
@@ -102,25 +104,25 @@ enum return_codes
 };
 
 // Needed for one and two stack args function calls
-inline int16_t f_add(int16_t a, int16_t b) { return a + b; };
-inline int16_t f_subtract(int16_t a, int16_t b) { return a - b; };
-inline int16_t f_multiply(int16_t a, int16_t b) { return (int16_t)a * b; };
-inline int16_t f_divide(int16_t a, int16_t b) { return a / b; };
-inline int16_t f_mod(int16_t a, int16_t b) { return a % b; };
-inline int16_t f_and(int16_t a, int16_t b) { return a & b; };
-inline int16_t f_or(int16_t a, int16_t b) { return a | b; };
-inline int16_t f_not(int16_t a) { return ~a; };
-inline int16_t f_left_shift(int16_t a, int16_t b) { return (a << b); };
-inline int16_t f_right_shift(int16_t a, int16_t b) { return a >> b; };
-inline int16_t f_equals(int16_t a, int16_t b) { return a == b; };
-inline int16_t f_greater_than(int16_t a, int16_t b) { return a > b; };
-inline int16_t f_less_than(int16_t a, int16_t b) { return a < b; };
-inline int16_t f_geq(int16_t a, int16_t b) { return a >= b; };
-inline int16_t f_leq(int16_t a, int16_t b) { return a <= b; };
+static inline int16_t f_add(int16_t a, int16_t b) { return a + b; };
+static inline int16_t f_subtract(int16_t a, int16_t b) { return a - b; };
+static inline int16_t f_multiply(int16_t a, int16_t b) { return (int16_t)a * b; };
+static inline int16_t f_divide(int16_t a, int16_t b) { return a / b; };
+static inline int16_t f_mod(int16_t a, int16_t b) { return a % b; };
+static inline int16_t f_and(int16_t a, int16_t b) { return a & b; };
+static inline int16_t f_or(int16_t a, int16_t b) { return a | b; };
+static inline int16_t f_not(int16_t a) { return ~a; };
+static inline int16_t f_left_shift(int16_t a, int16_t b) { return (a << b); };
+static inline int16_t f_right_shift(int16_t a, int16_t b) { return a >> b; };
+static inline int16_t f_equals(int16_t a, int16_t b) { return a == b; };
+static inline int16_t f_greater_than(int16_t a, int16_t b) { return a > b; };
+static inline int16_t f_less_than(int16_t a, int16_t b) { return a < b; };
+static inline int16_t f_geq(int16_t a, int16_t b) { return a >= b; };
+static inline int16_t f_leq(int16_t a, int16_t b) { return a <= b; };
 
 // Helper functions to grab lo and hi bits of 32-bit integer
-inline uint16_t lo(uint32_t n) { return n & (0xFFFF); };
-inline uint16_t hi(uint32_t n) { return (n >> 16) & (0xFFFF); };
+static inline uint16_t lo(uint32_t n) { return n & (0xFFFF); };
+static inline uint16_t hi(uint32_t n) { return (n >> 16) & (0xFFFF); };
 
 // Helper to sign extend a number from num_bits bits to 16 bits
 int16_t sign_extend(uint16_t n, unsigned int num_bits);
@@ -142,6 +144,6 @@ int two_arg_peek_comp(struct StackVM *vm, int16_t (*f)(int16_t, int16_t));
 // Functions to grab the file from user input
 int handle_instruction(struct StackVM *vm, uint16_t instruction);
 unsigned int program_length(FILE *file);
-void fetch_instructions(FILE *file, uint16_t *data, unsigned int length);
+void fetch_instructions(FILE *file, struct StackVM *vm, unsigned int length);
 
 #endif

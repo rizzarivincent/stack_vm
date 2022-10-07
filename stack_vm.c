@@ -4,6 +4,7 @@ struct StackVM init_stack_vm(struct StackVM *vm)
 {
   vm->reg[IP] = INSTRUCTION_START;
   vm->reg[SP] = STACK_START;
+  vm->c_flag = FALSE;
 }
 
 int push(struct StackVM *vm, int16_t n)
@@ -220,7 +221,7 @@ int handle_instruction(struct StackVM *vm, uint16_t instruction)
     case NO_DIV:
     {
       struct Pair *p;
-      RETURN_CHECK(pop(vm, p));
+      RETURN_CHECK(pop2(vm, p));
       if (p->b == 0)
         return DIVISION_BY_ZERO_ERROR;
       RETURN_CHECK(push(vm, p->a / p->b));
@@ -229,7 +230,7 @@ int handle_instruction(struct StackVM *vm, uint16_t instruction)
     case NO_MOD:
     {
       struct Pair *p;
-      RETURN_CHECK(pop(vm, p));
+      RETURN_CHECK(pop2(vm, p));
       if (p->b == 0)
         return DIVISION_BY_ZERO_ERROR;
       RETURN_CHECK(push(vm, p->a % p->b));
@@ -361,38 +362,7 @@ unsigned int program_length(FILE *file)
   return length;
 }
 
-void fetch_instructions(FILE *file, uint16_t *data, unsigned int length)
+void fetch_instructions(FILE *file, struct StackVM *vm, unsigned int length)
 {
-  size_t read = fread(data, sizeof(uint16_t), length, file);
-}
-
-int main(int argc, char *argv[])
-{
-  // Making sure file was supplied
-  if (argc != 2)
-    return 1;
-  FILE *file;
-  if ((file = fopen(argv[1], "rb")) == NULL)
-  {
-    fclose(file);
-    return 1;
-  }
-
-  // Initializing VM
-  struct StackVM *vm;
-  init_stack_vm(vm);
-
-  // Fetching instructions
-  unsigned int file_length = program_length(file) / 2;
-  printf("%d\n", file_length);
-  fetch_instructions(file, vm, file_length);
-  fclose(file);
-
-  // Main loop
-  uint16_t instruction;
-  while (1)
-  {
-    instruction = vm->memory[vm->reg[IP]++];
-    RETURN_CHECK(handle_instruction(vm, instruction));
-  }
+  size_t read = fread(vm->memory + INSTRUCTION_START, sizeof(uint16_t), length, file);
 }
