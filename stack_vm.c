@@ -9,7 +9,7 @@ struct StackVM init_stack_vm(struct StackVM *vm)
 
 int push(struct StackVM *vm, int16_t n)
 {
-  if (vm->reg[SP] <= STACK_END)
+  if (vm->reg[SP] < STACK_END)
     return FULL_STACK_ERROR;
   vm->memory[vm->reg[SP]--] = n;
   return SUCCESS;
