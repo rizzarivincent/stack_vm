@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -I -std=c11 -pedantic
+CFLAGS = -I -std=c11 -pedantic -g3
 DEPS = stack_vm.h stack_vm_test.h
 
 all:

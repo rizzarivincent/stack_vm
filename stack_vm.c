@@ -366,14 +366,6 @@ int handle_instruction(struct StackVM *vm, uint16_t instruction)
   }
 }
 
-unsigned int program_length(FILE *file)
-{
-  fseek(file, 0, SEEK_END);
-  unsigned int length = (unsigned int)ftell(file);
-  fseek(file, 0, SEEK_SET);
-  return length;
-}
-
 void fetch_instructions(FILE *file, struct StackVM *vm, unsigned int length)
 {
   size_t read = fread(vm->memory + INSTRUCTION_START, sizeof(uint16_t), length, file);
