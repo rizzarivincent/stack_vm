@@ -1,5 +1,5 @@
-Add unit tests for instructions
-
-Fix loading instructions from file
-
-Create a test file, load it, and run it!
+Assembler stuff:
+  Refactor some code to make main function slimmer
+  Maybe make a .h file if necessary
+  Allow for jump points with a jump table
+  Allow for variables with a label table

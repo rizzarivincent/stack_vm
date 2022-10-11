@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
   for (int i = 0; i < byte_length; i++)
   {
     byte_array[i] = getc(file);
-    printf("%d\n", (int)byte_array[i]);
+    // printf("%d\n", (int)byte_array[i]);
   }
   fclose(file);
 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
   {
     vm.memory[INSTRUCTION_START + i] = instructions[i];
   }
-  vm.memory[INSTRUCTION_START + instruction_length] = 0xC008;
+  vm.memory[INSTRUCTION_START + instruction_length] = (uint16_t)0xC008;
 
   // Running the instructions
   uint16_t instruction;
@@ -63,15 +63,6 @@ int main(int argc, char *argv[])
     instruction = vm.memory[vm.reg[IP]++];
     RETURN_CHECK(handle_instruction(&vm, instruction));
   }
-
-  // file = fopen("test_byte_mc.txt", "wb");
-  // fputc(0x00, file);
-  // fputc(0x05, file);
-  // fputc(0x00, file);
-  // fputc(0x04, file);
-  // fputc(0xC0, file);
-  // fputc(0x01, file);
-  // fclose(file);
 
   // Freeing allocated variables
   free(byte_array);

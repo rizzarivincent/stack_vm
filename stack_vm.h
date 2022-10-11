@@ -34,6 +34,13 @@ struct Pair
   int16_t b;
 };
 
+const char **op_names = {"PUSH", "LOAD", "STORE", "SWAP", "JMP", "BR", "NO", "TRAP"};
+const char **trap_names = {"GETC", "PUTC", "HALT"};
+const char **no_names = {"POP", "ADD", "SUB", "MULT", "MULTC", "DIV", "MOD", "AND",
+                         "OR", "NOT", "SHFTL", "SHFTR", "EQ", "LT", "GT", "LEQ",
+                         "GEQ", "DUP", "SWAPS", "IP", "LOADS", "LOADSI", "STORS",
+                         "STORSI", "JMPS", "BRS", "RET"};
+
 enum instructions
 {
   OP_PUSH = 0,
