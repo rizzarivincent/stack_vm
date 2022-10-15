@@ -1,10 +1,11 @@
 CC = gcc
 CFLAGS = -I -std=c11 -pedantic -g3
-DEPS = stack_vm.h stack_vm_test.h
+DEPS = stack_vm/stack_vm.h test/stack_vm_test.h
+VPATH = stack_vm:test:assembler
 
 all:
 	make main
-	make test
+	make stack_vm_test
 
 %.o: %.c (DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -12,8 +13,8 @@ all:
 main: main.o stack_vm.o
 	$(CC) -o $@ $^ $(CFLAGS)
 
-test: stack_vm_test.o stack_vm.o
+stack_vm_test: stack_vm_test.o stack_vm.o
 	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:
-	rm *.o main test
+	rm -f *.o main stack_vm_test

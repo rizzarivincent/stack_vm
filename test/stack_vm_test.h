@@ -1,4 +1,4 @@
-#include "stack_vm.h"
+#include "../stack_vm/stack_vm.h"
 
 #ifndef STACK_VM_TEST_H
 #define STACK_VM_TEST_H

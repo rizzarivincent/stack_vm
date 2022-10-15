@@ -7,6 +7,16 @@ struct StackVM init_stack_vm(struct StackVM *vm)
   vm->c_flag = FALSE;
 }
 
+int strcicmp(char const *a, char const *b)
+{
+  for (;; a++, b++)
+  {
+    int d = tolower((unsigned char)*a) - tolower((unsigned char)*b);
+    if (d != 0 || !*a)
+      return d;
+  }
+}
+
 int push(struct StackVM *vm, int16_t n)
 {
   if (vm->reg[SP] < STACK_END)

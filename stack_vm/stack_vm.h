@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <ctype.h>
 
 #define MEMORY_MAX (1 << 16)
 #define INSTRUCTION_START (0x3000)
@@ -34,12 +35,12 @@ struct Pair
   int16_t b;
 };
 
-const char **op_names = {"PUSH", "LOAD", "STORE", "SWAP", "JMP", "BR", "NO", "TRAP"};
-const char **trap_names = {"GETC", "PUTC", "HALT"};
-const char **no_names = {"POP", "ADD", "SUB", "MULT", "MULTC", "DIV", "MOD", "AND",
-                         "OR", "NOT", "SHFTL", "SHFTR", "EQ", "LT", "GT", "LEQ",
-                         "GEQ", "DUP", "SWAPS", "IP", "LOADS", "LOADSI", "STORS",
-                         "STORSI", "JMPS", "BRS", "RET"};
+static const char *op_names[] = {"PUSH", "LOAD", "STORE", "SWAP", "JMP", "BR", "NO", "TRAP"};
+static const char *trap_names[] = {"GETC", "PUTC", "HALT"};
+static const char *no_names[] = {"POP", "ADD", "SUB", "MULT", "MULTC", "DIV", "MOD", "AND",
+                                 "OR", "NOT", "SHFTL", "SHFTR", "EQ", "LT", "GT", "LEQ",
+                                 "GEQ", "DUP", "SWAPS", "IP", "LOADS", "LOADSI", "STORS",
+                                 "STORSI", "JMPS", "BRS", "RET"};
 
 enum instructions
 {
@@ -109,6 +110,8 @@ enum return_codes
   EXCEPTION,
   RETURN
 };
+
+int strcicmp(char const *a, char const *b);
 
 // Needed for one and two stack args function calls
 static inline int16_t f_add(int16_t a, int16_t b) { return a + b; }
