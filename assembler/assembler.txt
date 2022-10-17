@@ -1,0 +1,44 @@
+The assembler will take in code like this:
+
+  global main
+
+  main:
+    push 5
+    push 4
+    add
+    ip
+    call jPrintDigit
+    ret
+
+  jPrintDigit:            ; Stack: ... num ret_IP
+    swap 1                ; Stack: ... ret_IP num
+    push 48               ; Stack: ... ret_IP num 48
+    add                   ; Stack: ... ret_IP (num+48)
+    putc                  ; Stack: ... ret_IP
+    ret
+
+It will:
+  [FIRST PASS]
+    Find the global entry point through the global keyword, starting the IP there.
+    Find all jump labels, creating a jump table it can refer to.
+    Find all variable labels, creating a label table it can refer to.
+    Get the number of instructions.
+  [SECOND PASS]
+    Grab the instructions and place them in a
+
+Get token strings.
+Make them into Token objects.
+Find all label Tokens, checking if they exist in the tables and substituting them for address values.
+
+And it will produce the following machine code:
+  0:  0x0005    PUSH 5   -- main start --
+  1:  0x0004    PUSH 4
+  2:  0xC001    ADD
+  3:  0xC013    IP
+  4:  0x8006    JMP 6
+  5:  0xC01A    RET      -- main end --
+  6:  0x6001    SWAP 1   -- printDigit start --
+  7:  0x0030    PUSH 48
+  8:  0xC001    ADD
+  9:  0xE001    PUTC
+  10: 0xC01A    RET      -- printDigit end --

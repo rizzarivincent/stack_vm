@@ -1,45 +1,16 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include "../stack_vm/stack_vm.h"
+#include "assembler.h"
 
-#define BUFFER_SIZE 128
-#define JUMP_TABLE_MAX_SIZE 256
-
-struct JumpTableEntry
+int name_index(const char **arr, const char *s)
 {
-  char *name;
-  uint16_t address;
-};
-
-int fill_jump_table(char **tokens, int num_tokens, struct JumpTableEntry *jump_table)
-{
-  char *global;
-  int num_global = 0;
-
-  for (int i = 0; i < num_tokens; i++)
+  for (int i = 0; i < sizeof(arr) / sizeof(char *); i++)
   {
-    // Checking for jump
-    if (tokens[i][strlen(tokens[i]) - 1] == ':')
-    {
-    }
-    // Checking for global string
-    if (strcicmp(tokens[i], "global") == 0)
-    {
-      global = tokens[++i];
-      num_global++;
-    }
+    if (strcicmp(arr[i], s) == 0)
+      return i;
   }
-
-  if (num_global != 1)
-  {
-    printf("Failed to find the global entry point.\n");
-    return 1;
-  }
+  return -1;
 }
 
-int load_asm_file(FILE *file, char *file_name)
+int load_asm_file(FILE *file, const char *file_name)
 {
   if ((file = fopen(file_name, "r")) == NULL)
   {
@@ -49,7 +20,7 @@ int load_asm_file(FILE *file, char *file_name)
   }
 }
 
-int get_num_tokens(FILE *file)
+int get_token_count(const FILE *file)
 {
   char buffer[BUFFER_SIZE];
   int num_tokens = 0;
@@ -61,93 +32,166 @@ int get_num_tokens(FILE *file)
   return num_tokens;
 }
 
-void get_tokens(FILE *file, char **tokens, int num_tokens)
+int get_tokens(const FILE *file, struct Token *tokens, int token_count)
 {
   char buffer[BUFFER_SIZE];
-  for (int i = 0; i < num_tokens; i++)
+  int ip = 0;
+  for (int i = 0; i < token_count; i++)
   {
     fscanf(file, "%127s ", buffer);
-    tokens[i] = malloc(strlen(buffer));
-    strcpy(tokens[i], buffer);
+    if (get_token_from_string(buffer, tokens + i, INVALID_TOKEN, ip) != 0)
+      return 1;
+    // Take in next string as an imm, addr, jump label, or var label
+    if (tokens[i].type == OP_OPERATION_TOKEN)
+    {
+      i++;
+      if (get_token_from_string(buffer, tokens + i, OP_OPERATION_TOKEN, ip) != 0)
+        return 1;
+      ip++;
+    }
+    // Increment instruction pointer if needed
+    if (tokens[i].type == NO_OP_OPERATION_TOKEN || tokens[i].type == TRAP_OPERATION_TOKEN)
+      ip++;
   }
-  return;
+  return 0;
 }
 
-int name_index(char **arr, char *s)
+int get_token_from_string(const char *s, struct Token *t, const int prev_type, int ip)
 {
-  for (int i = 0; i < sizeof(arr) / sizeof(char *); i++)
+  int idx;
+  // If prev line was operand operation, then this *should be* an operand type (hex, decimal, jump label, or var label)
+  if (prev_type == OP_OPERATION_TOKEN)
   {
-    if (strcicmp(arr[i], s) == 0)
-      return i;
+    if (is_hex_num(s))
+    {
+      t->type = OPERAND_TOKEN;
+      t->value = (uint16_t)get_hex(s);
+      return 0;
+    }
+    else if (is_dec_num(s))
+    {
+      t->type = OPERAND_TOKEN;
+      t->value = (uint16_t)get_dec(s);
+      return 0;
+    }
+    else if (is_valid_label_name(s))
+    {
+      t->type = LABEL_USE_TOKEN;
+      t->name = malloc(sizeof(char) * strlen(s));
+      strcpy(t->name, s);
+      return 0;
+    }
+    else
+    {
+      printf("Invalid operand token.\n");
+      return 1;
+    }
+    t->ip = ip;
+    return 0;
   }
-  return -1;
+
+  // TODO: Check for keyword
+  // TEMP: Just checking for global keyword
+  if (strcicmp(s, "entry") == 0)
+  {
+    t->type = KEYWORD_TOKEN;
+    t->name = malloc(sizeof(char) * strlen("entry"));
+    strcpy(t->name, "entry");
+  }
+  // Check for operand operation
+  else if ((idx = name_index(op_names, s)) != -1)
+  {
+    t->type = OP_OPERATION_TOKEN;
+    t->value = idx;
+  }
+  // Check for no operand operation
+  else if ((idx = name_index(no_names, s)) != -1)
+  {
+    t->type = NO_OP_OPERATION_TOKEN;
+    t->value = idx;
+  }
+  // Check for trap operation
+  else if ((idx = name_index(trap_names, s)) != -1)
+  {
+    t->type = TRAP_OPERATION_TOKEN;
+    t->value = idx;
+  }
+  // Check for jump label
+  else if (is_jump_label(s))
+  {
+    if (!is_valid_label_name(s))
+    {
+      printf("Invalid jump label name.\n");
+      return 1;
+    }
+    t->type = JUMP_LABEL_TOKEN;
+    t->name = malloc(sizeof(char) * (strlen(s) - 1));
+    strncpy(t->name, s, (strlen(s) - 1));
+  }
+  // TODO: Check for var label
+  else
+  {
+    return 1;
+  }
+  t->ip = ip;
+  return 0;
 }
 
 int main(int argc, char *argv[])
 {
-  // Getting tokens from file
+  // Checking arg count
   if (argc != 2)
   {
     printf("Usage: ./assembler [file]\n");
     return 1;
   }
+
+  // Loading file
   FILE *file;
   if (load_asm_file(file, argv[1]) == 1)
     return 1;
-  int num_tokens = get_num_tokens(file);
-  char **tokens = malloc(sizeof(char *) * num_tokens);
-  get_tokens(file, tokens, num_tokens);
+
+  // Get number of tokens and all the tokens
+  int num_tokens = get_token_count(file);
+  struct Token *tokens = malloc(sizeof(struct Token) * num_tokens);
+  if (get_tokens(file, tokens, num_tokens) != 0)
+    return 1;
+  int num_instructions = tokens[num_tokens - 1].ip;
+
+  // Close the file
   fclose(file);
 
-  struct JumpTableEntry *jump_table = malloc(sizeof(struct JumpTableEntry) * JUMP_TABLE_MAX_SIZE);
+  // Getting number of jump labels and creating jump table
+  struct TableEntry *jump_table = malloc(sizeof(struct TableEntry) * JUMP_TABLE_MAX_SIZE);
+  int jump_count = 0;
+  for (int i = 0; i < num_tokens; i++)
+    if (tokens[i].type == JUMP_LABEL_TOKEN)
+    {
+      jump_table[jump_count].name = malloc(sizeof(char) * len(tokens[i].name));
+      strcpy(jump_table[jump_count].name, tokens[i].name);
+      jump_table[jump_count].address = tokens[i].ip;
+      jump_count++;
+    }
 
-  // Going through tokens, creating machine instructions
-  uint16_t *output_instructions = malloc(sizeof(uint16_t) * num_tokens);
-  int instruction_count = 0;
-  char *token, *dummy;
-  uint16_t operation, operand;
-  int op_idx, no_idx, trap_idx;
+  // Creating instructions
+  uint16_t *instructions = malloc(sizeof(uint16_t) * num_instructions);
+  int ip = 0;
   for (int i = 0; i < num_tokens; i++)
   {
-    token = tokens[i];
-    op_idx = name_index(op_names, token);     // Get position in op_names array
-    no_idx = name_index(no_names, token);     // Get position in no_names array
-    trap_idx = name_index(trap_names, token); // Get position in trap_names array
-
-    if (op_idx != -1) // Normal operand operation
-    {
-      operation = op_idx;
-      operand = (uint16_t)strtoul(tokens[++i], dummy, 10);
-    }
-    else if (no_idx != -1) // No-operand operation
-    {
-      operation = OP_NO;
-      operand = no_idx;
-    }
-    else if (trap_idx != -1) // Trap operation
-    {
-      operation = OP_TRAP;
-      operand = trap_idx;
-    }
-    else // Not found in any array: invalid
-    {
-      printf("Invalid instruction.\n");
-      return 1;
-    }
-
-    // Move op code to first 3 bits, make sure operand is max 13 bits long, combine to get instruction, add to instruction output
-    output_instructions[instruction_count++] = (operation << 13) | (operand & 0x1FFF);
   }
-  // Reallocating the size of instructions
-  output_instructions = realloc(output_instructions, sizeof(uint16_t) * instruction_count);
+
+  // Placing instructions into VM memory
 
   // Freeing allocated memory
   for (int i = 0; i < num_tokens; i++)
-  {
-    free(tokens[i]);
-  }
+    if (tokens[i].type == LABEL_USE_TOKEN ||
+        tokens[i].type == KEYWORD_TOKEN ||
+        tokens[i].type == JUMP_LABEL_TOKEN)
+      free(tokens[i].name);
   free(tokens);
+  for (int i = 0; i < jump_count; i++)
+    free(jump_table[i].name);
   free(jump_table);
-  free(output_instructions);
+  free(instructions);
   return 0;
 }
