@@ -10,14 +10,48 @@ int name_index(const char **arr, const char *s)
   return -1;
 }
 
-int load_asm_file(FILE *file, const char *file_name)
+int load_asm_file(FILE *file, const char *filename)
 {
-  if ((file = fopen(file_name, "r")) == NULL)
+  if ((file = fopen(filename, "r")) == NULL)
   {
     fclose(file);
-    printf("File: %s not found.\n", file_name);
+    printf("File: %s not found.\n", filename);
     return 1;
   }
+}
+
+int file_exists(char *filename)
+{
+  struct stat buffer;
+  return (stat(filename, &buffer) == 0) ? 1 : 0;
+}
+
+int output_to_file(uint16_t *instructions, int num_instructions, char *filename)
+{
+  if (file_exists(filename) == 1)
+  {
+    printf("File: %s already exists.\n", filename);
+    return 1;
+  }
+  FILE *out_file;
+  if ((out_file = fopen(filename, "wb")) == NULL)
+  {
+    fclose(out_file);
+    printf("File: %s could not be opened.\n", filename);
+    return 1;
+  }
+  uint16_t instr;
+  uint8_t first;
+  uint8_t second;
+  for (int i = 0; i < num_instructions; i++)
+  {
+    instr = instructions[i];
+    first = instr >> 8;
+    second = instr & 0x00FF;
+    putc(first, out_file);
+    putc(second, out_file);
+  }
+  return 0;
 }
 
 int get_token_count(const FILE *file)
@@ -44,6 +78,9 @@ int get_tokens(const FILE *file, struct Token *tokens, int token_count)
     // Take in next string as an imm, addr, jump label, or var label
     if (tokens[i].type == OP_OPERATION_TOKEN)
     {
+      if (i == token_count - 1)
+        return 1;
+      fscanf(file, "%127s ", buffer);
       i++;
       if (get_token_from_string(buffer, tokens + i, OP_OPERATION_TOKEN, ip) != 0)
         return 1;
@@ -86,12 +123,11 @@ int get_token_from_string(const char *s, struct Token *t, const int prev_type, i
       printf("Invalid operand token.\n");
       return 1;
     }
-    t->ip = ip;
     return 0;
   }
 
   // TODO: Check for keyword
-  // TEMP: Just checking for global keyword
+  // TEMP: Just checking for entry keyword
   if (strcicmp(s, "entry") == 0)
   {
     t->type = KEYWORD_TOKEN;
@@ -126,6 +162,7 @@ int get_token_from_string(const char *s, struct Token *t, const int prev_type, i
     }
     t->type = JUMP_LABEL_TOKEN;
     t->name = malloc(sizeof(char) * (strlen(s) - 1));
+    t->ip = ip;
     strncpy(t->name, s, (strlen(s) - 1));
   }
   // TODO: Check for var label
@@ -133,16 +170,15 @@ int get_token_from_string(const char *s, struct Token *t, const int prev_type, i
   {
     return 1;
   }
-  t->ip = ip;
   return 0;
 }
 
 int main(int argc, char *argv[])
 {
   // Checking arg count
-  if (argc != 2)
+  if (argc != 3)
   {
-    printf("Usage: ./assembler [file]\n");
+    printf("Usage: ./assembler [input file] [output file]\n");
     return 1;
   }
 
@@ -176,11 +212,66 @@ int main(int argc, char *argv[])
   // Creating instructions
   uint16_t *instructions = malloc(sizeof(uint16_t) * num_instructions);
   int ip = 0;
+  int operation, operand;
   for (int i = 0; i < num_tokens; i++)
   {
+    switch (tokens[i].type)
+    {
+    case OP_OPERATION_TOKEN:
+    {
+      operation = tokens[i].value;
+      i++;
+      switch (tokens[i].type)
+      {
+      case OPERAND_TOKEN:
+      {
+        operand = tokens[i].value;
+        break;
+      }
+      case LABEL_USE_TOKEN:
+      {
+        // Check in jump table
+        if ((operand = find_from_table(jump_table, jump_count, tokens[i + 1].name)) != -1)
+          break;
+        // TODO: Check in var table
+        printf("Label not found.\n");
+        return 1;
+      }
+      default:
+      {
+        printf("Invalid operand.\n");
+        return 1;
+      }
+      }
+      instructions[ip++] = construct_instruction(operation, operand);
+    }
+    case NO_OP_OPERATION_TOKEN:
+    {
+      operation = OP_NO;
+      operand = tokens[i].value;
+      instructions[ip++] = construct_instruction(operation, operand);
+    }
+    case TRAP_OPERATION_TOKEN:
+    {
+      operation = OP_TRAP;
+      instructions[ip++] = construct_instruction(operation, operand);
+    }
+    case JUMP_LABEL_TOKEN:
+    case VAR_LABLE_TOKEN:
+      break;
+    case OPERAND_TOKEN:
+    case LABEL_USE_TOKEN:
+      printf("Operand not expected.\n");
+      return 1;
+    default:
+      printf("Invalid token.\n");
+      return 1;
+    }
   }
 
-  // Placing instructions into VM memory
+  // Placing instructions into machine code file
+  if (output_to_file(instructions, num_instructions, argv[2]) != 0)
+    return 1;
 
   // Freeing allocated memory
   for (int i = 0; i < num_tokens; i++)

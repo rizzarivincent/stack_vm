@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "../stack_vm/stack_vm.h"
 
 #define BUFFER_SIZE 128
@@ -39,9 +40,12 @@ struct Token
 
 int name_index(const char **arr, const char *s);
 int load_asm_file(FILE *file, const char *file_name);
+int file_exists(char *filename);
+int output_to_file(uint16_t *instructions, int num_instructions, char *filename);
 int get_token_count(const FILE *file);
 int get_tokens(const FILE *file, struct Token *tokens, int token_count);
 int get_token_from_string(const char *s, struct Token *t, const int prev_type, int ip);
+int find_from_table(const struct TableEntry *table, const int table_size, const char *s);
 
 int is_hex(const char *s);
 int is_dec(const char *s);
